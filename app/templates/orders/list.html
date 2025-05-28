@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Мои заказы</h2>
+    
+    {% if orders %}
+        {% for order in orders %}
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</h5>
+                    </div>
+                    <div>
+                        <span class="badge {% if order.status == 'paid' %}bg-success{% elif order.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for item in order.order_items %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="row g-0">
+                                        <div class="col-4">
+                                            <img src="{{ url_for('games.serve_image', filename=item.game.image_url.split('/')[-1]) }}" 
+                                                 class="img-fluid rounded-start" alt="{{ item.game.title }}">
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ item.game.title }}</h5>
+                                                <p class="card-text">
+                                                    <small class="text-muted">Цена: {{ item.price }} ₽</small>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-end mt-3">
+                        <h5>Итого: {{ order.total_amount }} ₽</h5>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            У вас пока нет заказов
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

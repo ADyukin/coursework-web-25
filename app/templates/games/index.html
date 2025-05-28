@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Игры{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Левая колонка с фильтрами -->
+        <div class="col-md-3">
+            <form id="filterForm" method="GET" action="{{ url_for('games.index') }}">
+                <!-- Сохраняем параметр поиска -->
+                {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+                {% endif %}
+
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <i class="bi bi-funnel"></i> Фильтры
+                    </div>
+
+                    <!-- Фильтр по жанрам -->
+                    <div class="filter-group">
+                        <div class="filter-title">Жанры</div>
+                        {% for genre in genres %}
+                        <div class="filter-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="genres" value="{{ genre.id }}" id="genre{{ genre.id }}"
+                                    {% if genre.id in selected_genres %}checked{% endif %}>
+                                <label class="form-check-label" for="genre{{ genre.id }}">
+                                    <i class="bi bi-controller"></i> {{ genre.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Фильтр по авторам -->
+                    <div class="filter-group mt-4">
+                        <div class="filter-title">Авторы</div>
+                        {% for author in authors %}
+                        <div class="filter-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="authors" value="{{ author.id }}" id="author{{ author.id }}"
+                                    {% if author.id in selected_authors %}checked{% endif %}>
+                                <label class="form-check-label" for="author{{ author.id }}">
+                                    <i class="bi bi-person"></i> {{ author.name }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Фильтр по рейтингу -->
+                    <div class="filter-group mt-4">
+                        <div class="filter-title">Рейтинг</div>
+                        <div class="filter-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rating" value="5" id="rating5"
+                                    {% if min_rating == 5 %}checked{% endif %}>
+                                <label class="form-check-label" for="rating5">
+                                    <i class="bi bi-star-fill text-warning"></i> 5 звезд
+                                </label>
+                            </div>
+                        </div>
+                        <div class="filter-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rating" value="4" id="rating4"
+                                    {% if min_rating == 4 %}checked{% endif %}>
+                                <label class="form-check-label" for="rating4">
+                                    <i class="bi bi-star-fill text-warning"></i> 4 звезды и выше
+                                </label>
+                            </div>
+                        </div>
+                        <div class="filter-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="rating" value="3" id="rating3"
+                                    {% if min_rating == 3 %}checked{% endif %}>
+                                <label class="form-check-label" for="rating3">
+                                    <i class="bi bi-star-fill text-warning"></i> 3 звезды и выше
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Кнопки фильтров -->
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-check-lg"></i> Применить фильтры
+                        </button>
+                        <a href="{{ url_for('games.index') }}{% if search_query %}?search={{ search_query }}{% endif %}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-x-lg"></i> Сбросить фильтры
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Правая колонка с контентом -->
+        <div class="col-md-9">
+            <!-- Поиск -->
+            <div class="search-box mb-4">
+                <form method="GET" action="{{ url_for('games.index') }}" class="d-flex">
+                    <!-- Сохраняем параметры фильтрации -->
+                    {% for genre_id in selected_genres %}
+                    <input type="hidden" name="genres" value="{{ genre_id }}">
+                    {% endfor %}
+                    {% for author_id in selected_authors %}
+                    <input type="hidden" name="authors" value="{{ author_id }}">
+                    {% endfor %}
+                    {% if min_rating %}
+                    <input type="hidden" name="rating" value="{{ min_rating }}">
+                    {% endif %}
+
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" placeholder="Поиск по названию игры..." value="{{ search_query }}">
+                        {% if search_query %}
+                        <a href="{{ url_for('games.index') }}{% if selected_genres or selected_authors or min_rating %}?{% endif %}{% for genre_id in selected_genres %}genres={{ genre_id }}&{% endfor %}{% for author_id in selected_authors %}authors={{ author_id }}&{% endfor %}{% if min_rating %}rating={{ min_rating }}{% endif %}" class="btn btn-outline-secondary" type="button">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Найти
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Баннер -->
+            {% if banner_game and not search_query and not selected_genres and not selected_authors and not min_rating %}
+            <div class="banner">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="banner-content">
+                            <h1 class="display-4">{{ banner_game.title }}</h1>
+                            <p class="lead">{{ banner_game.description.split('.')[0] }}{% if banner_game.description.split('.')|length > 1 %}. {{ banner_game.description.split('.')[1] }}{% endif %}</p>
+                            <a href="{{ url_for('games.view', game_id=banner_game.id) }}" class="btn btn-primary btn-lg mt-3">
+                                <i class="bi bi-play-fill"></i> Подробнее
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <img src="{{ url_for('games.serve_image', filename=banner_game.image_url.split('/')[-1]) }}" 
+                             class="banner-image" alt="{{ banner_game.title }}">
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Категории -->
+            {% if not search_query and not selected_genres and not selected_authors and not min_rating %}
+            <div class="categories-section mb-5">
+                <h4 class="mb-4">Популярные категории</h4>
+                <div class="row">
+                    {% for genre in genres[:4] %}
+                    <div class="col-md-3">
+                        <a href="{{ url_for('games.index', genres=genre.id) }}" class="text-decoration-none">
+                            <div class="category-card">
+                                <div class="category-icon">
+                                    <i class="bi bi-controller"></i>
+                                </div>
+                                <h3 class="category-title">{{ genre.name }}</h3>
+                                <p class="category-count">{{ genre.count }} {{ get_game_word(genre.count) }}</p>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Популярные игры -->
+            {% if not search_query and not selected_genres and not selected_authors and not min_rating %}
+            <div class="popular-games-section mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Популярные игры</h4>
+                </div>
+                <div class="row gy-1">
+                    {% for game in popular_games %}
+                    <div class="col-md-4">
+                        <a href="{{ url_for('games.view', game_id=game.id) }}" class="text-decoration-none">
+                            <div class="card game-card">
+                                <img src="{{ url_for('games.serve_image', filename=game.image_url.split('/')[-1]) }}" 
+                                     class="card-img-top" alt="{{ game.title }}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-2">{{ game.title }}</h5>
+                                    <div class="mb-1">
+                                        <div class="rating mb-2">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-count">{{ "%.1f"|format(game.avg_rating) }} ({{ game.review_count }})</span>
+                                        </div>
+                                        <div class="price">{% if game.price == 0 %}Бесплатно{% else %}{{ game.price }} ₽{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Бесплатные игры -->
+            {% if not search_query and not selected_genres and not selected_authors and not min_rating %}
+            <div class="free-games-section mb-2">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Бесплатные игры</h4>
+                </div>
+                <div class="row gy-1">
+                    {% for game in free_games %}
+                    <div class="col-md-4">
+                        <a href="{{ url_for('games.view', game_id=game.id) }}" class="text-decoration-none">
+                            <div class="card game-card">
+                                <img src="{{ url_for('games.serve_image', filename=game.image_url.split('/')[-1]) }}" 
+                                     class="card-img-top" alt="{{ game.title }}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-2">{{ game.title }}</h5>
+                                    <div class="mb-3">
+                                        <div class="rating mb-1">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-count">{{ "%.1f"|format(game.avg_rating) }} ({{ game.review_count }})</span>
+                                        </div>
+                                        <div class="price">Бесплатно</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Все игры -->
+            <div class="all-games-section">
+                {% if not search_query and not selected_genres and not selected_authors and not min_rating %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Все игры</h4>
+                </div>
+                {% endif %}
+                <div class="row gy-1">
+                    {% for game in games %}
+                    <div class="col-md-4">
+                        <a href="{{ url_for('games.view', game_id=game.id) }}" class="text-decoration-none">
+                            <div class="card game-card">
+                                <img src="{{ url_for('games.serve_image', filename=game.image_url.split('/')[-1]) }}" 
+                                     class="card-img-top" alt="{{ game.title }}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title mb-2">{{ game.title }}</h5>
+                                    <div class="mb-1">
+                                        <div class="rating mb-2">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-count">{{ "%.1f"|format(game.avg_rating) }} ({{ game.review_count }})</span>
+                                        </div>
+                                        <div class="price">{% if game.price == 0 %}Бесплатно{% else %}{{ game.price }} ₽{% endif %}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Мои игры{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Мои игры</h1>
+
+    <div class="row gy-4">
+        {% for game in games %}
+        <div class="col-md-4">
+            <a href="{{ url_for('games.view', game_id=game.id) }}" class="text-decoration-none">
+                <div class="card game-card h-100">
+                    <img src="{{ url_for('games.serve_image', filename=game.image_url.split('/')[-1]) }}" 
+                         class="card-img-top" alt="{{ game.title }}">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">{{ game.title }}</h5>
+                        <div class="mb-3">
+                            <div class="rating mb-2">
+                                <i class="bi bi-star-fill"></i>
+                                <span class="rating-count">{{ "%.1f"|format(game.avg_rating) }} ({{ game.review_count }})</span>
+                            </div>
+                            <div class="text-muted small">
+                                Жанр: {{ game.genre_name }}<br>
+                                Куплено: {{ game.purchase_date.strftime('%d.%m.%Y') }}
+                            </div>
+                        </div>
+                        <div class="mt-auto">
+                            <a href="{{ url_for('games.download', game_id=game.id) }}" class="btn btn-success" onclick="event.stopPropagation()">
+                                <i class="bi bi-download"></i> Скачать
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

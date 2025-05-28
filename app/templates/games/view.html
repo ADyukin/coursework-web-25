@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4">
+        <a href="{{ url_for('games.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+    </div>
+
+    <!-- Основная информация об игре -->
+    <div class="row mb-5">
+        <!-- Изображение игры -->
+        <div class="col-md-6">
+            <img src="{{ url_for('games.serve_image', filename=game.image_url.split('/')[-1]) }}" 
+                 class="img-fluid rounded shadow" alt="{{ game.title }}">
+        </div>
+
+        <!-- Информация об игре -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ game.title }}</h1>
+            
+            <!-- Рейтинг -->
+            <div class="rating mb-3">
+                <i class="bi bi-star-fill text-warning"></i>
+                <span class="rating-count">{{ "%.1f"|format(game.avg_rating) }} ({{ game.review_count }} отзывов)</span>
+            </div>
+            
+            <!-- Автор -->
+            <div class="mb-3">
+                <h5>Разработчик</h5>
+                <p>{{ game.author_name }}</p>
+            </div>
+            
+            <!-- Дата выхода -->
+            <div class="mb-3">
+                <h5>Дата выхода</h5>
+                <p>{{ game.created_at.strftime('%d.%m.%Y') }}</p>
+            </div>
+            
+            <!-- Жанр -->
+            <div class="mb-3">
+                <h5>Жанр</h5>
+                <p>{{ game.genre_name }}</p>
+            </div>
+            
+            <!-- Цена и кнопка -->
+            <div class="mt-4">
+                <div class="price mb-3">
+                    <h3>{% if game.price == 0 %}Бесплатно{% else %}{{ game.price }} ₽{% endif %}</h3>
+                </div>
+                <div class="game-actions">
+                    {% if game.price == 0 %}
+                    <a href="{{ url_for('games.download', game_id=game.id) }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-download"></i> Скачать
+                    </a>
+                    {% else %}
+                    <a href="#" onclick="toggleCart({{ game.id }})" class="btn btn-lg {% if game.id in session.get('cart', []) %}btn-outline-danger{% else %}btn-primary{% endif %}" id="cartButton">
+                        {% if game.id in session.get('cart', []) %}
+                        <i class="bi bi-cart-dash"></i> Удалить из корзины
+                        {% else %}
+                        <i class="bi bi-cart-plus"></i> Добавить в корзину
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Описание игры -->
+    <div class="row mb-1">
+        <div class="col-12">
+            <div class="game-description">
+                <h2>Описание</h3>
+                <p>{{ game.description }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Системные требования -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-2">Системные требования</h2>
+            <div class="game-description">
+                {{ game.system|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Похожие игры -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="mb-4">Похожие игры</h2>
+            <div class="row">
+                {% for similar_game in similar_games %}
+                <div class="col-md-4">
+                    <a href="{{ url_for('games.view', game_id=similar_game.id) }}" class="text-decoration-none">
+                        <div class="card game-card">
+                            <img src="{{ url_for('games.serve_image', filename=similar_game.image_url.split('/')[-1]) }}" 
+                                 class="card-img-top" alt="{{ similar_game.title }}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-2">{{ similar_game.title }}</h5>
+                                <div class="mb-1">
+                                    <div class="rating mb-2">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span class="rating-count">{{ "%.1f"|format(similar_game.avg_rating) }} ({{ similar_game.review_count }})</span>
+                                    </div>
+                                    <div class="price">{% if similar_game.price == 0 %}Бесплатно{% else %}{{ similar_game.price }} ₽{% endif %}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Отзывы -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Отзывы</h2>
+            
+            <!-- Форма добавления отзыва -->
+            {% if current_user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Оставить отзыв</h5>
+                    <form method="POST" action="{{ url_for('games.add_review', game_id=game.id) }}">
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Оценка</label>
+                            <select class="form-select" id="rating" name="rating" required>
+                                <option value="5">5 звезд</option>
+                                <option value="4">4 звезды</option>
+                                <option value="3">3 звезды</option>
+                                <option value="2">2 звезды</option>
+                                <option value="1">1 звезда</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Комментарий</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Список отзывов -->
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="rating me-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div>
+                                    <h5 class="card-title mb-0">{{ review.user_name }}</h5>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                        </div>
+                        <p class="card-text">{{ review.comment }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Пока нет отзывов</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleCart(gameId) {
+    const button = document.getElementById('cartButton');
+    const isInCart = button.innerHTML.includes('Удалить');
+    
+    fetch(isInCart ? `/cart/remove/${gameId}` : `/cart/add/${gameId}`)
+        .then(response => {
+            if (response.ok) {
+                if (isInCart) {
+                    button.innerHTML = '<i class="bi bi-cart-plus"></i> Добавить в корзину';
+                    button.classList.remove('btn-outline-danger');
+                    button.classList.add('btn-primary');
+                } else {
+                    button.innerHTML = '<i class="bi bi-cart-dash"></i> Удалить из корзины';
+                    button.classList.remove('btn-primary');
+                    button.classList.add('btn-outline-danger');
+                }
+            }
+        });
+}
+</script>
+{% endblock %} 

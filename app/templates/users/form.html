@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% macro render_user_form(form, title) %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+    <form method="POST">
+        {{ form.csrf_token }}
+                
+        <div class="mb-3">
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+            {% if form.name.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.name.errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+            {% if form.email.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.email.errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+                {% if form.password %}
+        <div class="mb-3">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+            {% if form.password.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.password.errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            {{ form.role.label(class="form-label") }}
+                    {% if title == 'Редактирование профиля' and not is_admin %}
+                    <input type="text" class="form-control" value="{{ form.role.data }}" disabled>
+                    {{ form.role(style="display: none;") }}
+                    {% else %}
+            {{ form.role(class="form-select" + (" is-invalid" if form.role.errors else "")) }}
+                    {% endif %}
+            {% if form.role.errors %}
+            <div class="invalid-feedback">
+                {% for error in form.role.errors %}
+                {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+                <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <a href="{{ url_for('users.index') }}" class="btn btn-secondary">Отмена</a>
+                </div>
+    </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+{{ render_user_form(form, title) }}
+{% endblock %} 
