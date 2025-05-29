@@ -40,11 +40,11 @@ def index():
     min_rating = request.args.get('rating', type=int)
     search_query = request.args.get('search', '').strip()
     
-    # # Получаем или создаем случайную игру для баннера в сессии
-    # if 'banner_game_id' not in session or not request.args:  # Обновляем только при полной перезагрузке
-    #     banner_game_id = game_repository.get_banner_game()
-    #     if banner_game_id:
-    #         session['banner_game_id'] = banner_game_id
+    # Получаем или создаем случайную игру для баннера в сессии
+    if 'banner_game_id' not in session or not request.args:  # Обновляем только при полной перезагрузке
+        banner_game_id = game_repository.get_banner_game()
+        if banner_game_id:
+            session['banner_game_id'] = banner_game_id
     
     # Получаем данные игры для баннера
     banner_game = None
