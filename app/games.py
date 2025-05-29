@@ -317,7 +317,7 @@ def edit(game_id):
 
     form.title.data = game['title']
     form.description.data = game['description']
-    form.system_requirements.data = game['system']
+    form.system_requirements.data = game['system_requirements']
     form.price.data = game['price']
     form.genre_id.data = game['genre_id']
     form.image_url.data = game['image_url']

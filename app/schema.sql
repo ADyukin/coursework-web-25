@@ -24,7 +24,7 @@ CREATE TABLE games (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
-    system TEXT,
+    system_requirements TEXT,
     price DECIMAL(10,2) NOT NULL,
     status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     genre_id INTEGER,

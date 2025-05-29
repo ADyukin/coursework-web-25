@@ -51,7 +51,7 @@ class GameRepository:
         with self.db_connector.connect().cursor() as cursor:
             cursor.execute("""
                 SELECT 
-                    g.id, g.title, g.description, g.system, g.price, g.genre_id, 
+                    g.id, g.title, g.description, g.system_requirements, g.price, g.genre_id, 
                     g.file_path, g.image_url, g.created_at, g.status,
                     u.name as author_name, u.id as author_id
                 FROM games g
@@ -66,7 +66,7 @@ class GameRepository:
         with self.db_connector.connect().cursor() as cursor:
             cursor.execute("""
                 SELECT 
-                    g.id, g.title, g.description, g.system, g.price, g.genre_id, 
+                    g.id, g.title, g.description, g.system_requirements, g.price, g.genre_id, 
                     g.file_path, g.image_url, g.created_at, g.status,
                     u.name as author_name, u.id as author_id
                 FROM games g
@@ -81,7 +81,7 @@ class GameRepository:
         with self.db_connector.connect().cursor() as cursor:
             cursor.execute("""
                 SELECT 
-                    g.id, g.title, g.description, g.system, g.price, g.genre_id, 
+                    g.id, g.title, g.description, g.system_requirements, g.price, g.genre_id, 
                     g.file_path, g.image_url, g.created_at, g.status,
                     u.name as author_name, u.id as author_id
                 FROM games g
@@ -96,7 +96,7 @@ class GameRepository:
         with self.db_connector.connect().cursor() as cursor:
             cursor.execute("""
                 SELECT DISTINCT 
-                    g.id, g.title, g.description, g.system, g.price, g.genre_id, 
+                    g.id, g.title, g.description, g.system_requirements, g.price, g.genre_id, 
                     g.file_path, g.image_url, g.created_at, g.status,
                     u.name as author_name, u.id as author_id
                 FROM games g
@@ -123,7 +123,7 @@ class GameRepository:
         connection = self.db_connector.connect()
         with connection.cursor() as cursor:
             cursor.execute("""
-                INSERT INTO games (title, description, price, genre_id, author_id, file_path, image_url, status, system)
+                INSERT INTO games (title, description, price, genre_id, author_id, file_path, image_url, status, system_requirements)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (title, description, price, genre_id, author_id, file_path, image_url, status, system_requirements))
             connection.commit()
@@ -133,7 +133,7 @@ class GameRepository:
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE games 
-                SET title = %s, description = %s, price = %s, genre_id = %s, file_path = %s, image_url = %s, system = %s
+                SET title = %s, description = %s, price = %s, genre_id = %s, file_path = %s, image_url = %s, system_requirements = %s
                 WHERE id = %s
             """, (title, description, price, genre_id, file_path, image_url, system_requirements, game_id))
             connection.commit()
@@ -172,8 +172,8 @@ class GameRepository:
         with self.db_connector.connect().cursor() as cursor:
             query = """
                 SELECT 
-                    g.id, g.title, g.description, g.system, g.price, g.genre_id, 
-                    g.file_path, g.image_url, g.created_at, g.status,
+                    g.id, g.title, g.description, g.system_requirements, g.price, g.genre_id, 
+                    g.file_path, g.image_url, g.created_at, g.status,           
                     u.name as author_name, u.id as author_id
                 FROM games g
                 LEFT JOIN users u ON g.author_id = u.id
