@@ -25,12 +25,7 @@ class GameForm(FlaskForm):
     image_url = StringField('URL изображения', validators=[Optional()])
     submit = SubmitField('Сохранить')
 
-    def __init__(self, *args, **kwargs):
-        self.game_id = kwargs.pop('game_id', None)  # Получаем ID игры, если он есть
-        super(GameForm, self).__init__(*args, **kwargs)
-        self.game_repository = GameRepository(db)
-
     def validate_title(self, field):
-        # Проверяем уникальность только при создании новой игры
-        if not self.game_id and self.game_repository.game_exists_by_title(field.data):
+        game_repository = GameRepository(db)
+        if game_repository.game_exists_by_title(field.data):
             raise ValidationError('Игра с таким названием уже существует')

@@ -273,7 +273,7 @@ def edit(game_id):
     if current_user.role != 'admin' and current_user.id != game['author_id']:
         abort(403)
 
-    form = GameForm(game_id=game_id)  # Передаем ID игры в форму
+    form = GameForm()
     form.genre_id.choices = [(g['id'], g['name']) for g in game_repository.get_all_genres()]
 
     if form.validate_on_submit():
