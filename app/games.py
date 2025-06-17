@@ -266,16 +266,26 @@ def edit(game_id):
     """Редактирует игру"""
     game = game_repository.get_by_id(game_id)
     if game is None:
-        flash('Игра не найдена', 'danger')
+        flash('Игра не найдена', 'error')
         return redirect(url_for('games.index'))
-
-    # Проверяем права на редактирование
-    if current_user.role != 'admin' and current_user.id != game['author_id']:
-        abort(403)
-
+    
+    # Проверяем права доступа
+    if current_user.role != 'admin' and game['author_id'] != current_user.id:
+        flash('У вас нет прав для редактирования этой игры', 'error')
+        return redirect(url_for('games.index'))
+    
     form = GameForm()
+    form.game_id = game_id  # Устанавливаем ID игры как обычную переменную
     form.genre_id.choices = [(g['id'], g['name']) for g in game_repository.get_all_genres()]
-
+    
+    if request.method == 'GET':
+        form.title.data = game['title']
+        form.description.data = game['description']
+        form.system_requirements.data = game['system_requirements']
+        form.price.data = game['price']
+        form.genre_id.data = game['genre_id']
+        form.image_url.data = game['image_url']
+    
     if form.validate_on_submit():
         file_path = game['file_path']
         image_path = game['image_url']
@@ -283,9 +293,11 @@ def edit(game_id):
         if form.game_file.data:
             file = form.game_file.data
             if file and allowed_file(file.filename):
-                # Удаляем старый файл, если он существует
-                if file_path and os.path.exists(os.path.join(UPLOAD_FOLDER, file_path)):
-                    os.remove(os.path.join(UPLOAD_FOLDER, file_path))
+                # Удаляем старый файл
+                if file_path:
+                    old_file_path = os.path.join(UPLOAD_FOLDER, file_path)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
                 
                 filename = generate_safe_filename(form.title.data, file.filename)
                 file_path = filename
@@ -294,12 +306,14 @@ def edit(game_id):
         if form.image_file.data:
             image = form.image_file.data
             if image and allowed_image(image.filename):
-                # Удаляем старое изображение, если оно существует
-                if image_path and os.path.exists(os.path.join(IMAGE_FOLDER, image_path)):
-                    os.remove(os.path.join(IMAGE_FOLDER, image_path))
+                # Удаляем старое изображение
+                if image_path and image_path.startswith('images/'):
+                    old_image_path = os.path.join(IMAGE_FOLDER, image_path.split('/')[-1])
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
                 
                 filename = generate_safe_filename(form.title.data, image.filename)
-                image_path = filename
+                image_path = f'images/{filename}'
                 image.save(os.path.join(IMAGE_FOLDER, filename))
 
         game_repository.update(
@@ -312,15 +326,9 @@ def edit(game_id):
             file_path=file_path,
             image_url=image_path or form.image_url.data
         )
+        
         flash('Игра успешно обновлена', 'success')
         return redirect(url_for('games.view', game_id=game_id))
-
-    form.title.data = game['title']
-    form.description.data = game['description']
-    form.system_requirements.data = game['system_requirements']
-    form.price.data = game['price']
-    form.genre_id.data = game['genre_id']
-    form.image_url.data = game['image_url']
 
     return render_template('games/form.html', form=form, title='Редактирование игры')
 

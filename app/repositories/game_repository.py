@@ -351,9 +351,16 @@ class GameRepository:
             return [dict(zip([column[0] for column in cursor.description], row)) 
                    for row in cursor.fetchall()]
 
-    def game_exists_by_title(self, title):
+    def game_exists_by_title(self, title, exclude_id=None):
         """Проверяет, существует ли игра с таким названием"""
         with self.db_connector.connect().cursor() as cursor:
-            cursor.execute('SELECT COUNT(*) FROM games WHERE LOWER(title) = LOWER(%s)', (title,))
+            query = 'SELECT COUNT(*) FROM games WHERE LOWER(title) = LOWER(%s)'
+            params = [title]
+            
+            if exclude_id is not None:
+                query += ' AND id != %s'
+                params.append(exclude_id)
+                
+            cursor.execute(query, params)
             count = cursor.fetchone()[0]
             return count > 0 

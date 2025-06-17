@@ -15,17 +15,18 @@ class UserForm(FlaskForm):
         self.role.choices = UserRepository(None).get_all_roles()
 
 class GameForm(FlaskForm):
+    game_id = None  # Обычная переменная для ID игры
     title = StringField('Название', validators=[DataRequired()])
     description = TextAreaField('Описание', validators=[DataRequired()])
     system_requirements = TextAreaField('Системные требования')
-    price = DecimalField('Цена', validators=[DataRequired(), NumberRange(min=0)], places=2)
+    price = DecimalField('Цена', default=0, validators=[NumberRange(min=0)])
     genre_id = SelectField('Жанр', coerce=int, validators=[DataRequired()])
     game_file = FileField('Файл игры', validators=[Optional()])
     image_file = FileField('Изображение', validators=[Optional()])
-    image_url = StringField('URL изображения', validators=[Optional()])
+    image_url = StringField('URL изображения', validators=[Optional()]) 
     submit = SubmitField('Сохранить')
 
     def validate_title(self, field):
         game_repository = GameRepository(db)
-        if game_repository.game_exists_by_title(field.data):
+        if game_repository.game_exists_by_title(field.data, exclude_id=self.game_id):
             raise ValidationError('Игра с таким названием уже существует')
